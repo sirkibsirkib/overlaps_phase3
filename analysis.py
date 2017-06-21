@@ -14,6 +14,8 @@ def ok_solution(sol, excepted_id_list):
 		   	and sol[1] not in excepted_id_list\
 			and (sol[5] > 80 or sol[6] > 80)
 
+
+
 def next_sol(file, previous_sol, excepted_id_list):
 	while True:
 		line = file.readline().rstrip('\n')
@@ -22,7 +24,7 @@ def next_sol(file, previous_sol, excepted_id_list):
 		if line==None or len(line.strip()) == 0:
 			return None
 		sol = convert(line)
-		if ok_solution(sol, excepted_id_list) and sol != previous_sol:
+		if ok_solution(sol, excepted_id_list) and not equivalent_sols(sol, previous_sol):
 			return sol
 
 def smallest_sol(sols):
@@ -33,9 +35,28 @@ def smallest_sol(sols):
 				x = s
 	return x
 
-def venn_walk(excepted_id_list, paths):
+
+def almost(x, y):
+	return True
+	# return x*0.9 < y or y*0.9 < x
+
+def equivalent_sols(a, b):
+	if a == None:
+		return b == None
+	if b == None:
+		return a == None
+	return a[0]==b[0] and a[1]==b[1]\
+		   and a[2]==b[2]\
+		   and a[3]==b[3] and a[4]==b[4]\
+		   and almost(a[5], b[5]) and almost(a[6], b[6])
+
+
+impossible_solution = ('???eefef','***23r34r','???',-1,-1,-1,-1)
+
+def venn_walk(paths, excepted_id_list=()):
+	print(len(excepted_id_list), 'inds in EXCEPT list')
 	files = list(map(open, paths))
-	sols = list(map(lambda x : next_sol(x, None, excepted_id_list), files))
+	sols = list(map(lambda x : next_sol(x, impossible_solution, excepted_id_list), files))
 	counts = dict()
 	universal_sol_index = 0
 	while True:
@@ -45,7 +66,7 @@ def venn_walk(excepted_id_list, paths):
 		min_sol = smallest_sol(sols)
 		if min_sol == None:
 			break
-		key = tuple(map(lambda x : x==min_sol, sols))
+		key = tuple(map(lambda x : equivalent_sols(x, min_sol), sols))
 		if key not in counts:
 			counts[key] = 1
 		else:

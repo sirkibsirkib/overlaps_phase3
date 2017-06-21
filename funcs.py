@@ -1,3 +1,5 @@
+from analysis import ok_solution, next_sol
+
 
 SRC_PATH = "./mut0.01.fasta"
 GROUND_PATH_1 = "./strain1.sfo_fixed.tsv"
@@ -72,81 +74,7 @@ def peek(path, num):
 		count += 1
 		print(line.rstrip('\n'))
 		if count > num: return
-#
-def next(file):
-	while True:
-		line = file.readline().rstrip('\n')
-		if line.startswith("idA"):
-			continue
-		if line==None or len(line.strip()) == 0:
-			return None
-		sol = convert(line)
-		if ok_solution(sol):
-			return sol
 
-
-def pair_walk(a_path, b_path):
-
-	sample_size = 20
-
-	a_file = open(a_path)
-	b_file = open(b_path)
-
-	a_next = next(a_file)
-	b_next = next(b_file)
-
-	just_a = 0
-	just_b = 0
-	both = 0
-
-	a_sample = []
-	ab_sample = []
-	b_sample = []
-
-	loops = 0
-	while True:
-		loops += 1
-		# if loops > 1000:
-		# 	print('BREAKING EARLY')
-		# 	break
-		if loops % 10000==0:
-			print('loop:', '{:,}'.format(loops), '\t', just_a, both, just_b)
-		while a_next != b_next:
-			if b_next == None or (a_next != None and a_next < b_next):
-				a_sample.append(a_next)
-				if len(a_sample) >= sample_size*2:
-					a_sample = sorted(a_sample)[:sample_size]
-				a_next = next(a_file)
-				just_a += 1
-			else:
-				b_sample.append(b_next)
-				if len(b_sample) >= sample_size*2:
-					b_sample = sorted(b_sample)[:sample_size]
-				b_next = next(b_file)
-				just_b += 1
-		if a_next == None:
-			break
-		else:
-			ab_sample.append(a_next)
-			if len(ab_sample) >= sample_size*2:
-				ab_sample = sorted(ab_sample)[:sample_size]
-			a_next = next(a_file)
-			b_next = next(b_file)
-			both += 1
-	a_sample = a_sample[:sample_size]
-	ab_sample = ab_sample[:sample_size]
-	b_sample = b_sample[:sample_size]
-	print('\nA-only SAMPLE')
-	for x in a_sample: print(x)
-	print('\nAB SAMPLE')
-	for x in ab_sample: print(x)
-	print('\nB-only SAMPLE')
-	for x in b_sample: print(x)
-
-	assert len([z for z in a_sample if z in b_sample]) == 0
-
-
-	return just_a, both, just_b
 
 def find(path, sol):
 	pos = 0
@@ -162,12 +90,13 @@ def find(path, sol):
 		if pos % 1000 == 0 and pos  > 0:
 			print('havent found it until', a_next)
 
-def find_similar(path, sol):
+def find_similar(path, sol, excepted_id_list):
 	print('finding similar to ', sol, 'in', path)
 	max_id = max(sol[0], sol[1])
 	a_file = open(path)
+	a_next = None
 	while True:
-		a_next = next(a_file)
+		a_next = next_sol(a_file, a_next, excepted_id_list)
 		if a_next[0] > max_id:
 			return
 		if a_next==None:
@@ -180,14 +109,6 @@ def find_similar(path, sol):
 		elif (a_next[0] == sol[1] and a_next[1] == sol[0]):
 			print(a_next, "OPPOSITE ORIENTATION")
 
-def counts(sol_path, truth_path):
-	print('COUNTS of ', sol_path, 'vs.', truth_path)
-	just_s, both, just_t = pair_walk(sol_path, truth_path)
-	print('COUNTS: ', just_s, both, just_t)
-	precision = 1.0 * both / (both + just_s)
-	recall = 1.0 * both / (both + just_t)
-	f_measure = 2 * precision * recall / (precision + recall)
-	return precision, recall, f_measure
 
 # print(*counts("./data/viral/aspop.sorted.tsv",
 # 			  "./data/viral/truth.tsv"
