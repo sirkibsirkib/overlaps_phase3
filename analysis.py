@@ -39,7 +39,7 @@ def venn_walk(excepted_id_list, paths):
 	counts = dict()
 	universal_sol_index = 0
 	while True:
-		if universal_sol_index % 10000==0 and universal_sol_index > 0:
+		if universal_sol_index % 100000==0 and universal_sol_index > 0:
 			print('universal_sol_index:', '{:,}'.format(universal_sol_index), '\t')
 		universal_sol_index += 1
 		min_sol = smallest_sol(sols)
