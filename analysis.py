@@ -7,14 +7,14 @@ def convert(line):
 
 
 
-except_id_list = [int(line.rstrip('\n')) for line in open('./data/viral/removed_IDs.txt')]
+# except_id_list = [int(line.rstrip('\n')) for line in open('./data/viral/removed_IDs.txt')]
 
-def ok_solution(sol):
-	return sol[0] not in except_id_list\
-		   	and sol[1] not in except_id_list\
+def ok_solution(sol, excepted_id_list):
+	return sol[0] not in excepted_id_list\
+		   	and sol[1] not in excepted_id_list\
 			and (sol[5] > 80 or sol[6] > 80)
 
-def next_sol(file, previous_sol):
+def next_sol(file, previous_sol, excepted_id_list):
 	while True:
 		line = file.readline().rstrip('\n')
 		if line.startswith("idA"):
@@ -22,7 +22,7 @@ def next_sol(file, previous_sol):
 		if line==None or len(line.strip()) == 0:
 			return None
 		sol = convert(line)
-		if ok_solution(sol) and sol != previous_sol:
+		if ok_solution(sol, excepted_id_list) and sol != previous_sol:
 			return sol
 
 def smallest_sol(sols):
@@ -33,9 +33,9 @@ def smallest_sol(sols):
 				x = s
 	return x
 
-def venn_walk(paths):
+def venn_walk(excepted_id_list, paths):
 	files = list(map(open, paths))
-	sols = list(map(lambda x : next_sol(x, None), files))
+	sols = list(map(lambda x : next_sol(x, None, excepted_id_list), files))
 	counts = dict()
 	universal_sol_index = 0
 	while True:
@@ -52,7 +52,7 @@ def venn_walk(paths):
 			counts[key] += 1
 		for i in range(len(paths)):
 			if key[i]:
-				sols[i] = next_sol(files[i], sols[i])
+				sols[i] = next_sol(files[i], sols[i], excepted_id_list)
 	print('---------DONE---------')
 	print('counts:')
 	out_lines = [(''.join(map(lambda x : '#' if x else '-', k)) + '\t' + str(v))
